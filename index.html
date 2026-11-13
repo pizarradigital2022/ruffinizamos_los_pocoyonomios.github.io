@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breakout Educativo: El Misterio de los Bloques de Pocoyó</title>
+    <link rel="icon" type="image/x-icon" href="./resources/favicon.ico">
+    
+    <!-- CONFIGURACIÓN DE MATHJAX PARA FORMATEO DE SÍMBOLOS MATEMÁTICOS -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        if (typeof renderTeacherSolutions === 'function') {
+                            renderTeacherSolutions();
+                        }
+                    });
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <style>
+        :root {
+            --pocoyo-blue: #0099FF;
+            --pocoyo-dark-blue: #005BB5;
+            --pato-yellow: #FFD600;
+            --elly-pink: #FF4081;
+            --loula-orange: #FF6D00;
+            --pajaroto-green: #00C853;
+            --bg-world: #F4F9FF;
+            --card-bg: #FFFFFF;
+            --text-dark: #1E293B;
+            --border-soft: #BAE6FD;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-world);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 12% 18%, rgba(0, 153, 255, 0.12) 0%, transparent 35%),
+                radial-gradient(circle at 88% 82%, rgba(255, 214, 0, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 85% 15%, rgba(255, 64, 129, 0.08) 0%, transparent 30%);
+        }
+
+        /* Bloques de Construcción Decorativos Superiores (Estilo Mundo Pocoyó) */
+        .pocoyo-blocks {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 18px;
+        }
+        .toy-block {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+            animation: bounceBlock 2.5s ease-in-out infinite alternate;
+        }
+        .toy-block:nth-child(1) { background-color: var(--pocoyo-blue); animation-delay: 0s; }
+        .toy-block:nth-child(2) { background-color: var(--pato-yellow); animation-delay: 0.3s; }
+        .toy-block:nth-child(3) { background-color: var(--elly-pink); animation-delay: 0.6s; }
+        .toy-block:nth-child(4) { background-color: var(--pajaroto-green); animation-delay: 0.9s; }
+        .toy-block:nth-child(5) { background-color: var(--loula-orange); animation-delay: 1.2s; }
+
+        @keyframes bounceBlock {
+            0% { transform: translateY(0px) rotate(-3deg); }
+            100% { transform: translateY(-6px) rotate(3deg); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 5px solid var(--pocoyo-blue);
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 12px 35px rgba(0, 153, 255, 0.18), 0 6px 0 var(--pocoyo-dark-blue);
+            position: relative;
+        }
+
+        /* Header & Temporizador */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px dashed var(--border-soft);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 1.85rem;
+            color: var(--pocoyo-blue);
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .timer-box {
+            background: var(--pato-yellow);
+            border: 3px solid var(--loula-orange);
+            padding: 8px 20px;
+            border-radius: 16px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: 2px;
+            box-shadow: 0 3px 0 var(--loula-orange);
+        }
+
+        /* Gestión de Pantallas */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        /* Formularios y Botones */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--pocoyo-dark-blue);
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 14px;
+            border: 3px solid var(--border-soft);
+            background: #F8FAFC;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: var(--pocoyo-blue);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(0, 153, 255, 0.15);
+        }
+
+        .btn {
+            background: var(--pocoyo-blue);
+            color: white;
+            border: none;
+            padding: 13px 26px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 var(--pocoyo-dark-blue);
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background: #0088E6;
+            box-shadow: 0 6px 0 var(--pocoyo-dark-blue);
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--pocoyo-dark-blue);
+        }
+
+        .btn-secondary {
+            background: var(--elly-pink);
+            box-shadow: 0 4px 0 #C2185B;
+        }
+
+        .btn-secondary:hover {
+            background: #F50057;
+            box-shadow: 0 6px 0 #C2185B;
+        }
+
+        .btn-teacher {
+            background: #F1F5F9;
+            color: #475569;
+            border: 2px solid #CBD5E1;
+            box-shadow: none;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
+
+        .btn-teacher:hover {
+            background: #E2E8F0;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Clase común de imágenes centradas en bloque */
+        .image-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 15px 0 20px 0;
+        }
+
+        .game-image {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            max-height: 310px;
+            object-fit: contain;
+            background: #FFFFFF;
+            border-radius: 18px;
+            margin: 0 auto;
+            border: 3px solid var(--border-soft);
+            padding: 8px;
+        }
+
+        .action-below-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: 18px;
+        }
+
+        /* Avisos e Instrucciones */
+        .notebook-notice {
+            background: #FFFBEB;
+            border-left: 6px solid var(--pato-yellow);
+            border-top: 1px solid #FDE68A;
+            border-right: 1px solid #FDE68A;
+            border-bottom: 1px solid #FDE68A;
+            padding: 14px 16px;
+            margin: 15px 0;
+            border-radius: 0 14px 14px 0;
+            font-size: 0.98rem;
+            color: #78350F;
+        }
+
+        .problem-desc {
+            font-size: 1.12rem;
+            line-height: 1.65;
+            margin-bottom: 20px;
+            background: #F0F9FF;
+            border: 2px solid #BAE6FD;
+            padding: 18px;
+            border-radius: 16px;
+            color: var(--text-dark);
+        }
+
+        /* Estilos matemáticos limpios en HTML/CSS */
+        .math-display {
+            text-align: center;
+            font-size: 1.35rem;
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            background: #FFFFFF;
+            border: 2px solid #BAE6FD;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 14px 0;
+            color: var(--pocoyo-dark-blue);
+            box-shadow: 0 2px 6px rgba(0, 153, 255, 0.08);
+        }
+
+        .math-inline {
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-size: 1.15em;
+            color: inherit;
+        }
+
+        .math-var {
+            font-style: italic;
+        }
+
+        .math-param {
+            display: inline-block;
+            background: var(--pato-yellow);
+            color: var(--text-dark);
+            font-weight: 800;
+            font-style: normal;
+            padding: 0 7px;
+            border-radius: 6px;
+            border: 1.5px solid var(--loula-orange);
+            margin: 0 2px;
+        }
+
+        /* Cajas temáticas del Reto 1: Fondo pastel + borde y texto de su color fuerte */
+        .box-list {
+            list-style: none;
+            margin: 16px 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+            gap: 12px;
+        }
+
+        .box-card {
+            border-radius: 14px;
+            padding: 12px 16px;
+            border-width: 3px;
+            border-style: solid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.06);
+            transition: transform 0.2s ease;
+        }
+
+        .box-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .box-card-title {
+            font-weight: 800;
+            font-size: 0.98rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .box-card-expr {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .box-azul {
+            background-color: #E0F2FE;
+            border-color: #0284C7;
+            color: #0369A1;
+        }
+
+        .box-amarilla {
+            background-color: #FEF9C3;
+            border-color: #CA8A04;
+            color: #854D0E;
+        }
+
+        .box-rosa {
+            background-color: #FCE7F3;
+            border-color: #DB2777;
+            color: #9D174D;
+        }
+
+        .box-verde {
+            background-color: #DCFCE7;
+            border-color: #16A34A;
+            color: #166534;
+        }
+
+        .box-naranja {
+            background-color: #FFEDD5;
+            border-color: #EA580C;
+            color: #9A3412;
+        }
+
+        .box-morada {
+            background-color: #F3E8FF;
+            border-color: #9333EA;
+            color: #6B21A8;
+        }
+
+        .problem-desc ol {
+            margin: 12px 0 12px 24px;
+        }
+
+        .problem-desc ol li {
+            margin-bottom: 10px;
+        }
+
+        /* Navegación */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            gap: 10px;
+        }
+
+        .progress-bar {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 800;
+            color: var(--elly-pink);
+            background: #FFF0F6;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* Modal Profesor y Notificaciones */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 4px solid var(--pocoyo-blue);
+            border-radius: 24px;
+            max-width: 680px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 28px;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 14px; right: 18px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--elly-pink);
+            cursor: pointer;
+        }
+
+        /* Estilos Pantalla Éxito/Fracaso */
+        .result-screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .result-screen h2 {
+            font-size: 2.1rem;
+            margin-bottom: 15px;
+        }
+
+        .success-title { color: var(--pajaroto-green); }
+        .fail-title { color: var(--elly-pink); }
+
+        .teacher-badge {
+            display: inline-block;
+            background: var(--pocoyo-blue);
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .solution-item {
+            border-bottom: 2px dashed #E2E8F0;
+            padding: 14px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .solution-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div class="pocoyo-blocks">
+        <div class="toy-block"></div>
+        <div class="toy-block"></div>
+        <div class="toy-block"></div>
+        <div class="toy-block"></div>
+        <div class="toy-block"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1 id="app-title">El Misterio de los Bloques de Pocoyó</h1>
+            <div class="timer-box" id="timer-display">55:00</div>
+        </header>
+
+        <!-- PANTALLA 0: CONFIGURACIÓN -->
+        <div id="screen-0" class="screen active">
+            <h2 style="color: var(--elly-pink); margin-bottom: 12px; text-align: center; font-size: 1.6rem;">¡Hola! ¡Vamos a ayudar a Pocoyó y sus amigos!</h2>
+            <p style="margin-bottom: 20px; line-height: 1.6; text-align: center; font-size: 1.05rem;">
+                ¡Oh, no! El marciano enfadado ha guardado los juguetes favoritos de Pocoyó, Pato, Elly, Loula y Pajaroto dentro de una gran caja fuerte de colores. Para abrirla antes de que se acabe el tiempo, deberás superar <strong>5 retos algebraicos</strong> usando la <strong>Regla de Ruffini</strong> y el <strong>Teorema del Resto</strong>.
+            </p>
+
+            <div class="image-wrapper">
+                <img src="./resources/img_portada_pocoyo.png" alt="Portada Mundo Pocoyó" class="game-image">
+            </div>
+
+            <div class="form-group">
+                <label for="student-name">Nombre y Apellidos del Explorador / Equipo:</label>
+                <input type="text" id="student-name" placeholder="Escribe tu nombre completo aquí..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="time-select">Tiempo de la Misión (Minutos):</label>
+                <select id="time-select">
+                    <option value="55" selected>55 Minutos (Sesión completa)</option>
+                    <option value="45">45 Minutos (Ritmo estándar)</option>
+                    <option value="30">30 Minutos (Modo Súper Rápido)</option>
+                </select>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="btn" onclick="startGame()">¡Empezar a Jugar! 🚀</button>
+            </div>
+
+            <hr style="margin-top: 25px; border: none; border-top: 2px dashed var(--border-soft);">
+            <div style="text-align: center; margin-top: 12px; font-size: 0.9rem; color: #64748B;">
+                Recurso Educativo Abierto (REA) — Factorización de Polinomios
+                <div style="display: flex; justify-content: center; margin-top: 8px;">
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
+                        <img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual" style="display: block; height: 32px; margin: 0 auto;">
+                    </a>
+                </div>
+            </div>  
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="btn btn-teacher" onclick="openTeacherModal()">🔒 Modo Profesor</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE PROBLEMA DINÁMICA (PANTALLAS 1 A 5) -->
+        <div id="screen-problem" class="screen">
+            <div style="text-align: center;">
+                <div class="progress-bar" id="problem-progress">Reto 1 de 5</div>
+            </div>
+            <h2 id="problem-title" style="color: var(--pocoyo-dark-blue); margin-bottom: 12px; text-align: center;"></h2>
+            
+            <div class="notebook-notice">
+                ✏️ <strong>¡Consejo del Narrador!:</strong> Realiza todas las tablas de Ruffini y sustituciones del Teorema del Resto de forma limpia y ordenada en tu <strong>cuaderno de trabajo</strong> antes de escribir tu clave parcial.
+            </div>
+
+            <!-- 1. IMAGEN CENTRADA DEL PROBLEMA -->
+            <div id="problem-image-box" class="image-wrapper"></div>
+
+            <!-- 2. TEXTO DEL ENUNCIADO -->
+            <div class="problem-desc" id="problem-desc"></div>
+
+            <!-- 3. ÁREA DE TEXTO PARA INTRODUCIR EL RESULTADO -->
+            <div class="form-group">
+                <label for="problem-answer">Introduce el código numérico obtenido en este reto:</label>
+                <input type="text" id="problem-answer" placeholder="Escribe aquí las cifras sin espacios..." oninput="saveCurrentAnswer()">
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="btn-prev" onclick="navigateProblem(-1)">⬅️ Anterior</button>
+                <button class="btn" id="btn-next" onclick="navigateProblem(1)">Siguiente ➡️</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DEL CANDADO FINAL -->
+        <div id="screen-lock" class="screen">
+            <h2 style="color: var(--pocoyo-blue); text-align: center; margin-bottom: 10px;">🔓 La Caja Fuerte de los Juguetes</h2>
+            <p style="text-align: center; margin-bottom: 15px; font-size: 1.05rem;">
+                Explorador registrado: <strong id="lock-student-name" style="color: var(--elly-pink);"></strong>
+            </p>
+
+            <div class="notebook-notice" style="background: #F0F9FF; border-color: var(--pocoyo-blue); color: var(--pocoyo-dark-blue);">
+                🔑 <strong>Regla para obtener la combinación maestra (15 dígitos):</strong><br>
+                Junta los códigos numéricos obtenidos en cada uno de los 5 retos <strong>en orden</strong> (R1, R2, R3, R4 y R5; todos los números seguidos sin espacios ni guiones) para abrir la caja fuerte.
+            </div>
+
+            <div class="image-wrapper">
+                <img src="./resources/img_candado_pocoyo.png" alt="Caja Fuerte de Pocoyó" class="game-image">
+            </div>
+
+            <div style="background: #F8FAFC; border: 2px solid var(--border-soft); padding: 15px; border-radius: 16px; margin-bottom: 20px;">
+                <h3 style="color: var(--pocoyo-dark-blue); font-size: 1.05rem; margin-bottom: 10px;">Claves parciales guardadas en tus retos:</h3>
+                <div id="summary-answers" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                    <!-- Rellenado dinámicamente -->
+                </div>
+            </div>
+
+            <!-- CAMPO DE TEXTO PARA VALIDACIÓN MANUAL DE LA COMBINACIÓN -->
+            <div class="form-group" style="background: #FFFBEB; padding: 18px; border-radius: 16px; border: 3px solid var(--pato-yellow);">
+                <label for="final-lock-input" style="font-size: 1.15rem; color: #92400E; text-align: center; display: block;">
+                    🔑 Introduce la combinación maestra de 15 dígitos:
+                </label>
+                <input type="text" id="final-lock-input" placeholder="Ejemplo: 7254916..." style="text-align: center; font-size: 1.45rem; letter-spacing: 3px; font-weight: 800; border-color: var(--loula-orange);">
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" onclick="goToProblem(5)">⬅️ Volver a los Retos</button>
+                <button class="btn" onclick="checkLockCode()">¡Abrir Caja Fuerte! 🔑</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE ÉXITO -->
+        <div id="screen-success" class="screen result-screen">
+            <h2 class="success-title">🎉 ¡HURRA, <span class="player-name-display"></span>! 🎉</h2>
+            <p style="font-size: 1.15rem; margin-bottom: 20px; line-height: 1.6;">
+                ¡Lo lograste! La caja fuerte se ha abierto y Pocoyó, Pato, Elly, Loula y Pajaroto han recuperado todos sus juguetes. ¡Has demostrado ser un auténtico maestro de los polinomios!
+            </p>
+            
+            <div class="image-wrapper">
+                <img src="./resources/img_exito_pocoyo.png" alt="Pocoyó y sus amigos celebrando" class="game-image">
+            </div>
+
+            <div class="action-below-image">
+                <button class="btn" onclick="resetApp()">Jugar de Nuevo 🔄</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE FRACASO -->
+        <div id="screen-fail" class="screen result-screen">
+            <h2 class="fail-title">😮 ¡OH, NO, <span class="player-name-display"></span>! 😮</h2>
+            <p style="font-size: 1.15rem; margin-bottom: 20px; line-height: 1.6;">
+                La caja fuerte sigue cerrada o se ha agotado el tiempo. ¡No te rindas! Revisa los signos en tus tablas de Ruffini y comprueba tus sustituciones en el cuaderno.
+            </p>
+            
+            <div class="image-wrapper">
+                <img src="./resources/img_fracaso_pocoyo.png" alt="Pocoyó sorprendido" class="game-image">
+            </div>
+            
+            <div class="action-below-image">
+                <button class="btn" onclick="resetApp()">Volver a Intentarlo 🔄</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL PERSONALIZADO DE AVISOS -->
+    <div class="modal" id="custom-alert-modal">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <h3 style="color: var(--pocoyo-blue); margin-bottom: 15px; font-size: 1.4rem;">📢 Mensaje del Narrador</h3>
+            <p id="alert-modal-text" style="font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;"></p>
+            <button class="btn" onclick="closeCustomAlert()">¡Entendido!</button>
+        </div>
+    </div>
+
+    <!-- MODAL MODO PROFESOR -->
+    <div class="modal" id="teacher-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeTeacherModal()">&times;</span>
+            <h2 style="color: var(--pocoyo-blue); margin-bottom: 15px;">🔒 Panel de Control del Profesor</h2>
+            
+            <div id="teacher-login-section">
+                <p style="margin-bottom: 15px;">Introduce la contraseña docente para acceder al solucionario completo:</p>
+                <div class="form-group">
+                    <input type="password" id="teacher-pass-input" placeholder="Contraseña de acceso">
+                </div>
+                <button class="btn" onclick="verifyTeacherPass()">Acceder</button>
+                <p id="teacher-error-msg" style="color: var(--elly-pink); font-weight: bold; margin-top: 10px; display: none;">Contraseña incorrecta.</p>
+            </div>
+
+            <div id="teacher-content-section" style="display: none;">
+                <h3 style="color: var(--elly-pink); margin-bottom: 15px;">Solucionario del Breakout (Pocoyó)</h3>
+                <div id="solutions-list">
+                    <!-- Se llena con las soluciones detalladas -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ESTRUCTURA DE LOS 5 RETOS
+        const problems = [
+            {
+                id: 1,
+                title: "Reto 1: Los Sombreros de Pato (Teorema del Resto)",
+                type: "Teorema del Resto",
+                difficulty: "Nivel 1",
+                desc: `Pato ha perdido su sombrero favorito entre 6 cajas de colores. En la etiqueta principal aparece el polinomio:
+                <div class="math-display">
+                    <span class="math-var">P</span>(<span class="math-var">x</span>) = <span class="math-var">x</span><sup>3</sup> &minus; 4<span class="math-var">x</span><sup>2</sup> + <span class="math-var">x</span> + 6
+                </div>
+                Solo las 3 cajas cuyos binomios sean <strong>divisores exactos</strong> de <span class="math-inline"><span class="math-var">P</span>(<span class="math-var">x</span>)</span> contienen la pista correcta:
+                <ul class="box-list">
+                    <li class="box-card box-azul">
+                        <span class="box-card-title">Caja del dígito 4</span>
+                        <span class="box-card-expr math-inline">(<span class="math-var">x</span> &minus; 1)</span>
+                    </li>
+                    <li class="box-card box-amarilla">
+                        <span class="box-card-title">Caja del dígito 7</span>
+                        <span class="box-card-expr math-inline">(<span class="math-var">x</span> + 1)</span>
+                    </li>
+                    <li class="box-card box-rosa">
+                        <span class="box-card-title">Caja del dígito 2</span>
+                        <span class="box-card-expr math-inline">(<span class="math-var">x</span> &minus; 2)</span>
+                    </li>
+                    <li class="box-card box-verde">
+                        <span class="box-card-title">Caja del dígito 9</span>
+                        <span class="box-card-expr math-inline">(<span class="math-var">x</span> + 2)</span>
+                    </li>
+                    <li class="box-card box-naranja">
+                        <span class="box-card-title">Caja del dígito 5</span>
+                        <span class="box-card-expr math-inline">(<span class="math-var">x</span> &minus; 3)</span>
+                    </li>
+                    <li class="box-card box-morada">
+                        <span class="box-card-title">Caja del dígito 1</span>
+                        <span class="box-card-expr math-inline">(<span class="math-var">x</span> + 3)</span>
+                    </li>
+                </ul>
+                Aplica el Teorema del Resto (<span class="math-inline"><span class="math-var">P</span>(<span class="math-var">a</span>) = 0</span>), ordena las <strong>3 raíces obtenidas de menor a mayor</strong> y escribe el código de 3 cifras correspondiente a los dígitos de las cajas (que está en el título de cada una de ellas).`,
+                imageFile: "./resources/img_reto1_pato.png",
+                solution: "725",
+                explanation: `Calculamos los valores numéricos:<br>
+                &bull; <span class="math-inline"><span class="math-var">P</span>(&minus;1) = (&minus;1)<sup>3</sup> &minus; 4(&minus;1)<sup>2</sup> + (&minus;1) + 6 = &minus;1 &minus; 4 &minus; 1 + 6 = 0</span> (Caja del dígito 7)<br>
+                &bull; <span class="math-inline"><span class="math-var">P</span>(2) = 2<sup>3</sup> &minus; 4(2)<sup>2</sup> + 2 + 6 = 8 &minus; 16 + 2 + 6 = 0</span> (Caja del dígito 2)<br>
+                &bull; <span class="math-inline"><span class="math-var">P</span>(3) = 3<sup>3</sup> &minus; 4(3)<sup>2</sup> + 3 + 6 = 27 &minus; 36 + 3 + 6 = 0</span> (Caja del dígito 5)<br>
+                Ordenando las raíces de menor a mayor (&minus;1, 2, 3), obtenemos el código: <strong>725</strong>.`
+            },
+            {
+                id: 2,
+                title: "Reto 2: La Mochila de Elly (Ruffini Incompleto)",
+                type: "Regla de Ruffini",
+                difficulty: "Nivel 2",
+                desc: `Elly estaba haciendo los deberes en su cuaderno cuando Loula derramó zumo encima y borró algunos números de la división:
+                <div class="math-display">
+                    (2<span class="math-var">x</span><sup>4</sup> &minus; 5<span class="math-var">x</span><sup>2</sup> + 3<span class="math-var">x</span> &minus; 2) : (<span class="math-var">x</span> &minus; 2)
+                </div>
+                Realiza la división completa usando la <strong>Regla de Ruffini</strong> (¡cuidado, falta un grado en el dividendo!). Para obtener el código de 4 cifras, escribe seguidos: <strong>el coeficiente de <span class="math-inline"><span class="math-var">x</span><sup>2</sup></span> del cociente, el término independiente del cociente y el resto</strong>.`,
+                imageFile: "./resources/img_reto2_elly.png",
+                solution: "4916",
+                explanation: `Completamos con 0 el término en <span class="math-inline"><span class="math-var">x</span><sup>3</sup></span> (coeficientes: 2, 0, &minus;5, 3, &minus;2) y dividimos entre <span class="math-inline"><span class="math-var">a</span> = 2</span>.<br>
+                El cociente es <span class="math-inline"><span class="math-var">C</span>(<span class="math-var">x</span>) = 2<span class="math-var">x</span><sup>3</sup> + 4<span class="math-var">x</span><sup>2</sup> + 3<span class="math-var">x</span> + 9</span> y el resto es <span class="math-inline"><span class="math-var">R</span> = 16</span>.<br>
+                Concatenando coeficiente de <span class="math-inline"><span class="math-var">x</span><sup>2</sup></span> (<strong>4</strong>), término independiente (<strong>9</strong>) y resto (<strong>16</strong>), obtenemos: <strong>4916</strong>.`
+            },
+            {
+                id: 3,
+                title: "Reto 3: El Hueso Escondido de Loula (Parámetro Oculto)",
+                type: "Teorema del Resto Inverso",
+                difficulty: "Nivel 3",
+                desc: `Loula ha enterrado tres pistas en el jardín, pero en cada una falta el valor del parámetro <span class="math-inline"><span class="math-var">k</span></span>:
+                <ol>
+                    <li>Halla <span class="math-inline"><span class="math-var">k</span></span> para que <span class="math-inline"><span class="math-var">P</span>(<span class="math-var">x</span>) = <span class="math-var">x</span><sup>3</sup> + <span class="math-var">k</span><span class="math-var">x</span><sup>2</sup> &minus; 4<span class="math-var">x</span> + 8</span> sea divisible por <span class="math-inline">(<span class="math-var">x</span> &minus; 2)</span>.</li>
+                    <li>Halla <span class="math-inline"><span class="math-var">k</span></span> para que el resto de dividir <span class="math-inline"><span class="math-var">Q</span>(<span class="math-var">x</span>) = 2<span class="math-var">x</span><sup>3</sup> &minus; 3<span class="math-var">x</span> + <span class="math-var">k</span></span> entre <span class="math-inline">(<span class="math-var">x</span> + 1)</span> sea <span class="math-inline">5</span>.</li>
+                    <li>Halla <span class="math-inline"><span class="math-var">k</span></span> para que <span class="math-inline">(<span class="math-var">x</span> &minus; 1)</span> sea factor de <span class="math-inline"><span class="math-var">R</span>(<span class="math-var">x</span>) = <span class="math-var">x</span><sup>4</sup> &minus; <span class="math-var">k</span><span class="math-var">x</span><sup>2</sup> + 6</span>.</li>
+                </ol>
+                Para formar el código de 3 cifras, escribe en orden el <strong>valor absoluto</strong> (sin signo negativo) de los tres valores de <span class="math-inline"><span class="math-var">k</span></span> calculados.`,
+                imageFile: "./resources/img_reto3_loula.png",
+                solution: "247",
+                explanation: `1) <span class="math-inline"><span class="math-var">P</span>(2) = 8 + 4<span class="math-var">k</span> &minus; 8 + 8 = 0 &rarr; 4<span class="math-var">k</span> = &minus;8 &rarr; <span class="math-var">k</span> = &minus;2</span> (valor absoluto: <strong>2</strong>).<br>
+                2) <span class="math-inline"><span class="math-var">Q</span>(&minus;1) = &minus;2 + 3 + <span class="math-var">k</span> = 5 &rarr; 1 + <span class="math-var">k</span> = 5 &rarr; <span class="math-var">k</span> = 4</span> (valor absoluto: <strong>4</strong>).<br>
+                3) <span class="math-inline"><span class="math-var">R</span>(1) = 1 &minus; <span class="math-var">k</span> + 6 = 0 &rarr; <span class="math-var">k</span> = 7</span> (valor absoluto: <strong>7</strong>).<br>
+                El código de 3 cifras es: <strong>247</strong>.`
+            },
+            {
+                id: 4,
+                title: "Reto 4: El Nido de Pajaroto (Factorización Completa)",
+                type: "Factorización",
+                difficulty: "Nivel 4",
+                desc: `Pajaroto necesita reconstruir su nido encajando las piezas del siguiente polinomio de grado 3:
+                <div class="math-display">
+                    <span class="math-var">P</span>(<span class="math-var">x</span>) = 2<span class="math-var">x</span><sup>3</sup> &minus; 2<span class="math-var">x</span><sup>2</sup> &minus; 12<span class="math-var">x</span>
+                </div>
+                Factorízalo por completo (recuerda sacar primero factor común antes de aplicar Ruffini) hasta expresarlo de la forma:
+                <div class="math-display">
+                    <span class="math-var">P</span>(<span class="math-var">x</span>) = <span class="math-param">A</span><span class="math-var">x</span>(<span class="math-var">x</span> &minus; <span class="math-param">B</span>)(<span class="math-var">x</span> + <span class="math-param">C</span>)
+                </div>
+                Escribe los valores de <span class="math-param">A</span>, <span class="math-param">B</span> y <span class="math-param">C</span> seguidos para obtener el código de 3 cifras.`,
+                imageFile: "./resources/img_reto4_pajaroto.png",
+                solution: "232",
+                explanation: `Sacamos factor común <span class="math-inline">2<span class="math-var">x</span></span>: <span class="math-inline"><span class="math-var">P</span>(<span class="math-var">x</span>) = 2<span class="math-var">x</span>(<span class="math-var">x</span><sup>2</sup> &minus; <span class="math-var">x</span> &minus; 6)</span>.<br>
+                Aplicando Ruffini a <span class="math-inline"><span class="math-var">x</span><sup>2</sup> &minus; <span class="math-var">x</span> &minus; 6</span>, obtenemos las raíces <span class="math-inline"><span class="math-var">x</span> = 3</span> y <span class="math-inline"><span class="math-var">x</span> = &minus;2</span>, por lo que <span class="math-inline"><span class="math-var">P</span>(<span class="math-var">x</span>) = 2<span class="math-var">x</span>(<span class="math-var">x</span> &minus; 3)(<span class="math-var">x</span> + 2)</span>.<br>
+                Así, <strong>A = 2</strong>, <strong>B = 3</strong> y <strong>C = 2</strong>. Código: <strong>232</strong>.`
+            },
+            {
+                id: 5,
+                title: "Reto 5: La Nave del Marciano (Raíces Encadenadas)",
+                type: "Ruffini Sucesivo",
+                difficulty: "Nivel 5 (Desafío Final)",
+                desc: `Para desactivar el escudo de la nave del marciano, debes encontrar las 4 raíces enteras del siguiente polinomio de grado 4 aplicando Ruffini sucesivamente:
+                <div class="math-display">
+                    <span class="math-var">P</span>(<span class="math-var">x</span>) = <span class="math-var">x</span><sup>4</sup> &minus; 2<span class="math-var">x</span><sup>3</sup> &minus; 13<span class="math-var">x</span><sup>2</sup> + 14<span class="math-var">x</span> + 24
+                </div>
+                Una vez tengas las 4 raíces, calcula la clave de 2 cifras formada por: <strong>la suma de las raíces positivas</strong> seguida del <strong>producto de las raíces negativas</strong>.`,
+                imageFile: "./resources/img_reto5_marciano.png",
+                solution: "63",
+                explanation: `Probando divisores de 24, las 4 raíces enteras son <span class="math-inline"><span class="math-var">x</span><sub>1</sub> = &minus;3</span>, <span class="math-inline"><span class="math-var">x</span><sub>2</sub> = &minus;1</span>, <span class="math-inline"><span class="math-var">x</span><sub>3</sub> = 2</span> y <span class="math-inline"><span class="math-var">x</span><sub>4</sub> = 4</span>.<br>
+                &bull; Suma de raíces positivas: <span class="math-inline">2 + 4 = 6</span>.<br>
+                &bull; Producto de raíces negativas: <span class="math-inline">(&minus;3) &middot; (&minus;1) = 3</span>.<br>
+                El código final de 2 cifras es: <strong>63</strong>.`
+            }
+        ];
+
+        // ESTADO DE LA APLICACIÓN
+        let currentProblemIndex = 0;
+        let studentAnswers = ["", "", "", "", ""];
+        let timerInterval = null;
+        let timeLeft = 0;
+        let studentName = "";
+
+        // INICIALIZACIÓN
+        window.onload = function() {
+            renderTeacherSolutions();
+        };
+
+        // RENDERIZADO REUTILIZABLE DE MATHJAX
+        function renderMath(containerElement = null) {
+            if (window.MathJax && MathJax.typesetPromise) {
+                if (window.MathJax.typesetClear) {
+                    MathJax.typesetClear(containerElement ? [containerElement] : undefined);
+                }
+                MathJax.typesetPromise(containerElement ? [containerElement] : undefined)
+                    .catch(err => console.log('MathJax error:', err));
+            }
+        }
+
+        // FUNCIONES DE ALERTA PERSONALIZADA
+        function showAlert(message) {
+            document.getElementById('alert-modal-text').textContent = message;
+            document.getElementById('custom-alert-modal').style.display = 'flex';
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert-modal').style.display = 'none';
+        }
+
+        // NAVEGACIÓN Y PANTALLAS
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const activeScreen = document.getElementById(screenId);
+            activeScreen.classList.add('active');
+            renderMath(activeScreen);
+        }
+
+        // INICIAR JUEGO
+        function startGame() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            if (!nameInput) {
+                showAlert("¡Por favor, escribe tu nombre y apellidos antes de empezar la aventura!");
+                return;
+            }
+            studentName = nameInput;
+            const duration = parseInt(document.getElementById('time-select').value);
+            
+            // Iniciar Temporizador
+            timeLeft = duration * 60;
+            startTimer();
+
+            // Cargar Reto 1
+            currentProblemIndex = 0;
+            loadProblem(currentProblemIndex);
+            showScreen('screen-problem');
+        }
+
+        // TEMPORIZADOR
+        function startTimer() {
+            clearInterval(timerInterval);
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishGame(false);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('timer-display').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // CARGA DE PROBLEMA (ORDEN: IMAGEN CENTRADA -> TEXTO -> INPUT)
+        function loadProblem(index) {
+            const p = problems[index];
+            document.getElementById('problem-progress').textContent = `Reto ${index + 1} de 5 | ${p.type} (${p.difficulty})`;
+            document.getElementById('problem-title').textContent = p.title;
+            
+            // 1. Imagen centrada encima del texto
+            const imgBox = document.getElementById('problem-image-box');
+            imgBox.innerHTML = `
+                <img src="${p.imageFile}" alt="Ilustración ${p.title}" class="game-image">
+            `;
+
+            // 2. Texto del enunciado
+            const descBox = document.getElementById('problem-desc');
+            descBox.innerHTML = p.desc;
+
+            // 3. Área de texto para introducir el resultado
+            document.getElementById('problem-answer').value = studentAnswers[index];
+
+            document.getElementById('btn-prev').style.visibility = (index === 0) ? 'hidden' : 'visible';
+            
+            const nextBtn = document.getElementById('btn-next');
+            if (index === problems.length - 1) {
+                nextBtn.textContent = "Ir a la Caja Fuerte 🔓";
+            } else {
+                nextBtn.textContent = "Siguiente Reto ➡️";
+            }
+
+            renderMath(document.getElementById('screen-problem'));
+        }
+
+        function saveCurrentAnswer() {
+            const val = document.getElementById('problem-answer').value.trim();
+            studentAnswers[currentProblemIndex] = val;
+        }
+
+        function navigateProblem(direction) {
+            saveCurrentAnswer();
+            currentProblemIndex += direction;
+
+            if (currentProblemIndex >= problems.length) {
+                openLockScreen();
+            } else if (currentProblemIndex < 0) {
+                currentProblemIndex = 0;
+            } else {
+                loadProblem(currentProblemIndex);
+            }
+        }
+
+        function goToProblem(problemNum) {
+            currentProblemIndex = problemNum - 1;
+            loadProblem(currentProblemIndex);
+            showScreen('screen-problem');
+        }
+
+        // PANTALLA DEL CANDADO
+        function openLockScreen() {
+            document.getElementById('lock-student-name').textContent = studentName;
+            
+            const summaryContainer = document.getElementById('summary-answers');
+            summaryContainer.innerHTML = "";
+
+            const autoConcatenated = studentAnswers.map(a => a.toString().trim()).join('');
+            document.getElementById('final-lock-input').value = autoConcatenated;
+
+            studentAnswers.forEach((ans, i) => {
+                const item = document.createElement('div');
+                item.style.background = "#FFFFFF";
+                item.style.padding = "10px";
+                item.style.borderRadius = "10px";
+                item.style.border = "2px solid var(--pocoyo-blue)";
+                item.style.textAlign = "center";
+                item.innerHTML = `<small style="color:#64748B; font-weight:bold;">Reto ${i+1}:</small> <strong style="color:var(--pocoyo-dark-blue); font-size:1.1rem;">${ans || '?'}</strong>`;
+                summaryContainer.appendChild(item);
+            });
+
+            showScreen('screen-lock');
+        }
+
+        // VERIFICAR CÓDIGO FINAL
+        function checkLockCode() {
+            const correctCode = problems.map(p => p.solution.toString()).join('');
+            const userCode = document.getElementById('final-lock-input').value.trim();
+
+            if (userCode === correctCode) {
+                finishGame(true);
+            } else {
+                finishGame(false);
+            }
+        }
+
+        // FINALIZAR JUEGO
+        function finishGame(success) {
+            clearInterval(timerInterval);
+            document.querySelectorAll('.player-name-display').forEach(el => el.textContent = studentName);
+
+            if (success) {
+                showScreen('screen-success');
+            } else {
+                showScreen('screen-fail');
+            }
+        }
+
+        function resetApp() {
+            studentAnswers = ["", "", "", "", ""];
+            document.getElementById('student-name').value = "";
+            document.getElementById('final-lock-input').value = "";
+            showScreen('screen-0');
+        }
+
+        // MODAL MODO PROFESOR
+        function openTeacherModal() {
+            document.getElementById('teacher-modal').style.display = 'flex';
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-modal').style.display = 'none';
+        }
+
+        function verifyTeacherPass() {
+            const pass = document.getElementById('teacher-pass-input').value;
+            const errorMsg = document.getElementById('teacher-error-msg');
+            
+            if (pass === 'PROFE2026') {
+                errorMsg.style.display = 'none';
+                document.getElementById('teacher-login-section').style.display = 'none';
+                document.getElementById('teacher-content-section').style.display = 'block';
+                renderTeacherSolutions();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        function renderTeacherSolutions() {
+            const listContainer = document.getElementById('solutions-list');
+            listContainer.innerHTML = "";
+
+            let fullCode = "";
+
+            problems.forEach(p => {
+                fullCode += p.solution.toString();
+                const item = document.createElement('div');
+                item.className = 'solution-item';
+                item.innerHTML = `
+                    <h4 style="color:var(--pocoyo-dark-blue);">${p.title} <span class="teacher-badge">${p.type}</span></h4>
+                    <p style="color:var(--elly-pink); margin: 5px 0;"><strong>Clave del Reto:</strong> ${p.solution}</p>
+                    <p style="font-size:0.95rem; color:#334155; margin-top: 3px;"><strong>Resolución paso a paso:</strong> ${p.explanation}</p>
+                `;
+                listContainer.appendChild(item);
+            });
+
+            const lockCodeBox = document.createElement('div');
+            lockCodeBox.style.marginTop = "20px";
+            lockCodeBox.style.padding = "14px";
+            lockCodeBox.style.background = "#ECFDF5";
+            lockCodeBox.style.border = "2px dashed var(--pajaroto-green)";
+            lockCodeBox.style.borderRadius = "12px";
+            lockCodeBox.innerHTML = `<strong>🔑 Combinación Maestra Final (15 dígitos):</strong><br><span style="font-size:1.45rem; color:var(--pajaroto-green); letter-spacing:2px; font-weight:800;">${fullCode}</span>`;
+            listContainer.appendChild(lockCodeBox);
+
+            renderMath(listContainer);
+        }
+    </script>
+</body>
+</html>
